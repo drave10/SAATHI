@@ -1,0 +1,23 @@
+# The website lives in the "frontend" folder. This root config tells Netlify to build from there
+# (otherwise the repository root, which has no index.html, gets published and the site shows 404).
+[build]
+  base = "frontend"
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+  VITE_STATIC_DEMO = "false"
+
+# Send API calls to the Render backend so the browser only ever talks to one origin (no CORS needed).
+[[redirects]]
+  from = "/api/*"
+  to = "https://saathi-2.onrender.com/api/:splat"
+  status = 200
+  force = true
+
+# Single-page-app fallback so deep links such as /app/cases work.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
