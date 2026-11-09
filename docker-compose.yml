@@ -1,0 +1,20 @@
+# docker compose up --build        (UI on http://localhost:8080, API docs on http://localhost:8000/docs)
+# First run only, to load synthetic demo data:  docker compose run --rm api python -m scripts.seed --reset
+services:
+  api:
+    build: ./backend
+    env_file: .env
+    environment:
+      DATABASE_URL: sqlite:////data/saathi.db   # swap for postgresql+psycopg2://... to use PostgreSQL
+      CORS_ORIGINS: http://localhost:8080
+    volumes:
+      - saathi-data:/data
+    ports:
+      - "8000:8000"
+  web:
+    build: ./frontend
+    depends_on: [api]
+    ports:
+      - "8080:80"
+volumes:
+  saathi-data:
