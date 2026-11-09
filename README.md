@@ -162,13 +162,3 @@ reminders under consent, offline-first mobile app, fairness auditing, proper bac
 | 429 "Too many failed attempts" | Account locked 15 min after 5 bad logins; re-seed or wait |
 | ML advisory missing | Run `python -m scripts.train_model` (app works without it) |
 | `node` not found after install | Open a new terminal so PATH refreshes |
-
-## Publishing to GitHub
-Git was not available in the authoring environment, so nothing has been pushed. To publish:
-```bash
-git init && git add . && git commit -m "SAATHI prototype"
-git branch -M main
-git remote add origin https://github.com/<you>/saathi.git
-git push -u origin main
-```
-`.gitignore` already excludes `.env`, databases, `node_modules`, virtual-envs and trained model binaries. Check `git status` shows no `.env` before pushing.
