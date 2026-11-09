@@ -6,7 +6,7 @@
 
 [build.environment]
   NODE_VERSION = "22"
-  VITE_STATIC_DEMO = "true"
+  
 
 # Single-page-app fallback so deep links such as /app/cases work.
 [[redirects]]
