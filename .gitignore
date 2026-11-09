@@ -17,7 +17,6 @@ frontend/playwright-report/
 .DS_Store
 .vscode/
 .idea/
-.claude/
 frontend/tsconfig.tsbuildinfo
 backend/audit_state.txt
 backend/models/ml_advisory.joblib
