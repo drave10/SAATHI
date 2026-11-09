@@ -1,12 +1,22 @@
-# Netlify config for the SELF-CONTAINED static demo (no backend needed).
-# Netlify: Import from Git -> base directory "frontend" (settings below are picked up automatically).
+# Netlify config: the website talks to the real SAATHI backend hosted on Render.
+# Netlify: Import from Git -> base directory "frontend" (everything below is picked up automatically).
+#
+# To publish the self-contained static demo instead (no backend), set VITE_STATIC_DEMO = "true" below
+# and delete the /api rule.
 [build]
   command = "npm run build"
   publish = "dist"
 
 [build.environment]
   NODE_VERSION = "22"
-  
+  VITE_STATIC_DEMO = "false"
+
+# Send API calls to the Render backend so the browser only ever talks to one origin (no CORS needed).
+[[redirects]]
+  from = "/api/*"
+  to = "https://saathi-2.onrender.com/api/:splat"
+  status = 200
+  force = true
 
 # Single-page-app fallback so deep links such as /app/cases work.
 [[redirects]]
