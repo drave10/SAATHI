@@ -1,0 +1,95 @@
+import { useState } from 'react'
+import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import {
+  Activity, BarChart3, BookOpen, ClipboardCheck, ClipboardList, HeartPulse, History, LayoutDashboard, LogOut, Menu,
+  Settings, ShieldCheck, Stethoscope, TrendingUp, Users, CalendarClock, X, type LucideIcon,
+} from 'lucide-react'
+import { useAuth } from '../auth/AuthContext'
+import type { Role } from '../types'
+
+interface NavItem { to: string; label: string; icon: LucideIcon }
+
+const NAV: Record<Role, NavItem[]> = {
+  beneficiary: [
+    { to: '/app', label: 'Dashboard', icon: LayoutDashboard },
+    { to: '/app/assessment', label: 'Check-in', icon: ClipboardCheck },
+    { to: '/app/history', label: 'History', icon: History },
+    { to: '/app/trends', label: 'Well-being trends', icon: TrendingUp },
+    { to: '/app/resources', label: 'Support resources', icon: BookOpen },
+    { to: '/app/settings', label: 'Settings & privacy', icon: Settings },
+  ],
+  caseworker: [
+    { to: '/app', label: 'Dashboard', icon: LayoutDashboard },
+    { to: '/app/cases', label: 'Cases', icon: Users },
+    { to: '/app/followups', label: 'Follow-ups', icon: CalendarClock },
+    { to: '/app/interventions', label: 'Interventions', icon: Stethoscope },
+    { to: '/app/settings', label: 'Settings', icon: Settings },
+  ],
+  admin: [
+    { to: '/app', label: 'Overview', icon: LayoutDashboard },
+    { to: '/app/users', label: 'User management', icon: Users },
+    { to: '/app/analytics', label: 'Analytics', icon: BarChart3 },
+    { to: '/app/settings', label: 'Settings', icon: Settings },
+  ],
+}
+const ROLE_LABEL: Record<Role, string> = { beneficiary: 'Beneficiary portal', caseworker: 'Caseworker workspace', admin: 'Administration' }
+
+export function Logo({ light = false }: { light?: boolean }) {
+  return (
+    <div className="flex items-center gap-2.5">
+      <span className="grid h-8 w-8 place-items-center rounded-lg bg-teal-500 text-white"><HeartPulse className="h-4.5 w-4.5" aria-hidden /></span>
+      <span className={`text-lg font-semibold tracking-tight ${light ? 'text-white' : 'text-navy-800'}`}>SAATHI</span>
+    </div>
+  )
+}
+
+export default function Layout() {
+  const { user, logout } = useAuth()
+  const nav = useNavigate()
+  const [open, setOpen] = useState(false)
+  if (!user) return null
+  const items = NAV[user.role]
+
+  const sidebar = (
+    <div className="flex h-full flex-col bg-navy-800 text-navy-100">
+      <div className="flex h-16 items-center justify-between px-5"><Logo light />
+        <button className="rounded p-1 text-navy-200 lg:hidden" onClick={() => setOpen(false)} aria-label="Close menu"><X className="h-5 w-5" /></button>
+      </div>
+      <p className="px-5 pb-2 text-xs font-medium uppercase tracking-wider text-navy-300">{ROLE_LABEL[user.role]}</p>
+      <nav aria-label="Main" className="flex-1 space-y-1 px-3">
+        {items.map(({ to, label, icon: Icon }) => (
+          <NavLink key={to} to={to} end={to === '/app'} onClick={() => setOpen(false)}
+            className={({ isActive }) => `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${isActive ? 'bg-navy-600 text-white' : 'text-navy-200 hover:bg-navy-700 hover:text-white'}`}>
+            <Icon className="h-4 w-4" aria-hidden /> {label}
+          </NavLink>
+        ))}
+      </nav>
+      <div className="space-y-3 border-t border-navy-700 p-4">
+        <div className="flex items-start gap-2 rounded-lg bg-navy-700/60 p-3 text-xs text-navy-200">
+          <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-teal-300" aria-hidden />
+          Decision-support prototype. Not a diagnostic tool. Demo data is synthetic.
+        </div>
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0"><div className="truncate text-sm font-medium text-white">{user.display_name}</div><div className="text-xs capitalize text-navy-300">{user.role}</div></div>
+          <button className="rounded-lg p-2 text-navy-200 hover:bg-navy-700 hover:text-white" aria-label="Log out" onClick={async () => { await logout(); nav('/') }}><LogOut className="h-4 w-4" /></button>
+        </div>
+      </div>
+    </div>
+  )
+
+  return (
+    <div className="min-h-screen lg:flex">
+      <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-white focus:px-3 focus:py-2">Skip to content</a>
+      <aside className="hidden w-64 shrink-0 lg:block"><div className="fixed inset-y-0 w-64">{sidebar}</div></aside>
+      {open && <div className="fixed inset-0 z-40 lg:hidden"><div className="absolute inset-0 bg-navy-900/50" onClick={() => setOpen(false)} /><div className="relative h-full w-72">{sidebar}</div></div>}
+      <div className="min-w-0 flex-1">
+        <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-slate-200 bg-white/90 px-4 backdrop-blur lg:hidden">
+          <button className="btn-ghost p-2" onClick={() => setOpen(true)} aria-label="Open menu"><Menu className="h-5 w-5" /></button><Logo />
+        </header>
+        <main id="main" className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8"><Outlet /></main>
+      </div>
+    </div>
+  )
+}
+
+export const _icons = { Activity, ClipboardList }
