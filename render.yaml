@@ -1,0 +1,39 @@
+# Render Blueprint: creates the API web service + a PostgreSQL database in one go.
+# Render dashboard -> New -> Blueprint -> pick your GitHub repo.
+services:
+  - type: web
+    name: saathi-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements-postgres.txt
+    startCommand: python -m scripts.bootstrap && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.4
+      - key: APP_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: saathi-db
+          property: connectionString
+      - key: CORS_ORIGINS
+        value: "https://example.netlify.app"   # replace with your Netlify URL after step 2 (see DEPLOY.md); the Netlify proxy makes calls same-origin anyway
+      - key: DEMO_MODE
+        value: "true"   # one-click demo roles on the login page (synthetic data only). Set to "false" to require passwords.
+      - key: SEED_ADMIN_USERNAME
+        value: admin
+      # You are asked for these three when the Blueprint is created. Choose strong passwords and share them only with reviewers.
+      - key: SEED_ADMIN_PASSWORD
+        sync: false
+      - key: SEED_CASEWORKER_PASSWORD
+        sync: false
+      - key: SEED_BENEFICIARY_PASSWORD
+        sync: false
+
+databases:
+  - name: saathi-db
+    plan: free
