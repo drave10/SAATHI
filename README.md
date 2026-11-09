@@ -22,7 +22,7 @@ self-reported well-being over time, and prioritise scarce human follow-up. See `
 | Area | What is implemented |
 |---|---|
 | Roles | Beneficiary, Caseworker, Administrator — RBAC enforced on the **backend** |
-| Check-in | 17-item prototype questionnaire (Likert, multiple-choice, optional free text), consent gate, save & resume, validation |
+| Check-in | 18-item prototype questionnaire (17 required Likert / multiple-choice questions + 1 optional free-text box), consent gate, save & resume, validation |
 | Engine | Transparent, configurable, explainable rules; missing-data handling; change-vs-previous; persistence; critical-item rules; optional experimental ML advisory (synthetic-trained) |
 | Monitoring | Per-person timeline, dimension trends, review notifications for the assigned caseworker |
 | Case management | Search/filter/sort/paginate cases, single-screen case profile, notes, follow-ups (incl. beneficiary requests), interventions + outcomes, status |
@@ -123,7 +123,7 @@ docker compose run --rm api python -m scripts.seed --reset # first run: load syn
 > Please run them once and report problems; see Troubleshooting.
 
 ### Hosting a public demo
-Free shareable link without buying a domain (Render for API + database, Netlify for the UI): see [DEPLOY.md](DEPLOY.md).
+Free shareable link without buying a domain: see [DEPLOY.md](DEPLOY.md). **Option A needs only Netlify**: the frontend has a self-contained *static demo* mode (`VITE_STATIC_DEMO=true`, set in `frontend/netlify.toml`) in which a TypeScript port of the rules engine and API runs inside the browser with synthetic data, so no server is needed. Option B hosts the real FastAPI backend on Render. Static-build tests: `cd frontend; $env:VITE_STATIC_DEMO="true"; npm run build; npx playwright test -c playwright.static.config.ts`. The full project report is in `report/SAATHI_Project_Report.docx`.
 
 ### Demo mode (no passwords)
 Set `DEMO_MODE=true` (already set in your local `.env` and in `render.yaml`) and the login page shows **Beneficiary / Caseworker / Admin** buttons that sign in as the seeded synthetic accounts with one click. It is off by default.

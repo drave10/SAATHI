@@ -5,7 +5,7 @@
 > were not verified. The output is a **review priority** that asks a human to look sooner or later — not a diagnosis and not a probability of harm.
 
 ## 1. Questionnaire (`backend/app/engine/questionnaire.py`)
-17 items over a two-week look-back; 16 are scored Likert/multiple-choice items and 1 is optional free text (never scored or analysed).
+18 items over a two-week look-back: 17 required closed-ended questions (Likert / multiple choice) and 1 optional free-text box (never scored or analysed). Fifteen of the closed-ended questions feed the seven dimension scores; two (`chg_1` change since last check-in, `help_1` wish to speak to someone) are used directly by rules. The UI shows them in 8 sections (the seven dimensions plus a final "A few last questions" section).
 
 | Dimension | Items |
 |---|---|
@@ -39,7 +39,7 @@ The level is the highest level triggered. Every triggered rule becomes a **facto
 what caseworkers see under "Why this review priority?". If nothing triggers, the single factor `no_new_indicators` is recorded.
 
 ### Missing data
-If fewer than `min_completion` (60 %) of the scored items were answered, **threshold, change and persistence rules are not applied** (they would be unreliable) and
+If fewer than `min_completion` (60 %) of the 17 closed-ended items were answered, **threshold, change and persistence rules are not applied** (they would be unreliable) and
 a data-quality note is attached; **critical-item rules are always evaluated** on whatever was answered. Incomplete data therefore never silently produces a "Routine"
 verdict without a visible caveat, and never suppresses a safety trigger.
 

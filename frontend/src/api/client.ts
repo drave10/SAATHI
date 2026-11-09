@@ -1,6 +1,10 @@
 import axios, { AxiosError } from 'axios'
+import { demoAdapter } from '../demo/adapter'
 
 const TOKEN_KEY = 'saathi.token'
+
+/** True for the self-contained build (VITE_STATIC_DEMO=true): the whole API runs in the browser with synthetic data. */
+export const STATIC_DEMO = import.meta.env.VITE_STATIC_DEMO === 'true'
 
 export const tokenStore = {
   get(): string | null { try { return sessionStorage.getItem(TOKEN_KEY) } catch { return null } },
@@ -9,6 +13,7 @@ export const tokenStore = {
 }
 
 export const api = axios.create({ baseURL: '/api', timeout: 20000 })
+if (STATIC_DEMO) api.defaults.adapter = demoAdapter
 
 api.interceptors.request.use((cfg) => {
   const t = tokenStore.get()

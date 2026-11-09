@@ -9,5 +9,5 @@ export default defineConfig({
     port: 5173,
     proxy: { '/api': { target: process.env.VITE_API_PROXY ?? 'http://localhost:8000', changeOrigin: true } },
   },
-  test: { environment: 'jsdom', setupFiles: ['./src/test/setup.ts'], globals: true, exclude: ['e2e/**', 'node_modules/**'] },
+  test: { environment: 'jsdom', setupFiles: ['./src/test/setup.ts'], globals: true, exclude: ['e2e/**', 'e2e-static/**', 'node_modules/**'] },
 })

@@ -1,41 +1,66 @@
-# Deploy SAATHI for free: shareable link (Render + Netlify)
+# Hosting SAATHI
 
-Result: `https://<your-site>.netlify.app` that anyone can open. No domain purchase needed. ~15 minutes.
+There are two ways to host it. **Option A needs only Netlify and no server.**
 
-> **Honest status:** the configuration files here were checked locally (the backend starts in production mode on an empty database, migrates, seeds and serves logins),
-> but the actual Render/Netlify deployments could not be performed from the authoring environment. If a step differs on their dashboards, the settings below tell you what is needed.
-> Use this only with the **synthetic demo data**; do not enter real beneficiary information (see `docs/security_and_privacy.md`).
+| | Option A: static demo (recommended for a prototype link) | Option B: full stack |
+|---|---|---|
+| What runs | The React app plus an in-browser copy of the API and rules engine | React app + FastAPI + PostgreSQL |
+| Accounts needed | Netlify (free) | Netlify + Render (free tiers) |
+| Data | Synthetic, stored in each visitor's browser | Synthetic or real, stored in a shared database |
+| Backend features (real JWT security, shared data, ML advisory) | Not included | Included |
+| Use with real data | **No** | Only after the security and legal steps in `docs/security_and_privacy.md` |
 
-## 0. Put the code on GitHub (Render needs a repository)
-Easiest without Git: install **GitHub Desktop**, "Add local repository" → this folder → Publish (it respects `.gitignore`, so `.env` and databases are NOT uploaded).
-Or with Git: see "Publishing to GitHub" in `README.md`.
+---
 
-## 1. Backend + database on Render (free)
-1. Sign up at render.com with GitHub.
-2. **New → Blueprint** → select your SAATHI repo. Render reads `render.yaml` and proposes a web service `saathi-api` and a PostgreSQL database `saathi-db`.
-3. When asked, enter three **strong** passwords: `SEED_ADMIN_PASSWORD`, `SEED_CASEWORKER_PASSWORD`, `SEED_BENEFICIARY_PASSWORD` (you will share these with reviewers).
-4. Click **Apply**. The first deploy takes ~5–8 minutes. On start the app migrates the database and loads the synthetic demo data automatically (only when the database is empty).
-5. Open `https://saathi-api.onrender.com/api/health` → should show `{"status":"ok",…}`.
-   If Render gave the service a different name/URL (e.g. `saathi-api-x1y2.onrender.com`), use that URL in step 2 below.
+## Option A: Netlify only (static demo)
 
-## 2. Frontend on Netlify (free)
-Option A – drag and drop (no Git needed):
-1. On your PC: `cd frontend`, `npm ci`, `npm run build`.
-2. Open app.netlify.com → **Add new site → Deploy manually** → drag the `frontend/dist` folder in.
-3. If your Render URL is not `saathi-api.onrender.com`, edit `frontend/public/_redirects` first (replace the hostname), then rebuild.
+1. Put the project on GitHub (see `README.md`, "Publishing to GitHub").
+2. Sign in at **app.netlify.com** and choose **Add new site → Import an existing project → GitHub**, then pick the repository.
+3. Set **Base directory** to `frontend`. Netlify reads `frontend/netlify.toml` automatically:
+   - build command `npm run build`
+   - publish directory `dist`
+   - environment variable `VITE_STATIC_DEMO=true` (this switches the app to its built-in demo API)
+   - single-page-app fallback so deep links work
+4. Click **Deploy**. After about a minute Netlify shows a link such as `https://random-name.netlify.app`. Rename it under *Site configuration → Change site name*. **That is the link to share.**
 
-Option B – from GitHub: Netlify → **Import from Git** → base directory `frontend` (settings come from `frontend/netlify.toml`; edit the hostname there if needed).
+No-Git alternative: on your PC run `cd frontend`, `npm ci`, then build with the demo flag
+(PowerShell: `$env:VITE_STATIC_DEMO="true"; npm run build`) and drag the `frontend/dist` folder onto Netlify's **Add new site → Deploy manually** page.
 
-Netlify gives you `https://<random-name>.netlify.app` (rename it under *Site settings → Change site name*). **That is the link to share.**
-The file `_redirects`/`netlify.toml` proxies `/api/*` to Render, so the browser only talks to one origin and no CORS setup is needed.
+Reviewers click **Beneficiary**, **Caseworker** or **Admin** on the login page, or sign in with `admin`, `caseworker1`..`caseworker5` or `ben001`..`ben025` and the password `Demo-pass-1`. A banner explains that data stays in their own browser; **Reset demo data** restores the sample data.
 
-## 3. Share it
-Demo mode is on in `render.yaml` (`DEMO_MODE=true`), so reviewers just open the link and click **Beneficiary**, **Caseworker** or **Admin** - no passwords. Set it to `"false"` on Render to require logins again.
-Give reviewers the link plus logins: `admin`, `caseworker1`…`caseworker5`, `ben001`…`ben025` with the passwords you chose.
+Local check before deploying: `$env:VITE_STATIC_DEMO="true"; npm run build; npx vite preview`.
 
-## Things to know
-* **Cold starts:** Render's free service sleeps after ~15 min idle; the first request then takes 30–60 s. Open the link yourself a minute before a demo.
-* **Free database expiry:** Render's free PostgreSQL is time-limited (currently ~30 days). For a longer-lived demo create a free database at neon.tech and set `DATABASE_URL` on the Render service to its connection string.
-* **Reset the demo data:** Render → saathi-api → Shell → `python -m scripts.seed --reset` (or delete and recreate the database).
-* **Security:** HTTPS is automatic. Anyone with the link can try to sign in, so use strong seed passwords; accounts lock for 15 minutes after 5 failed attempts.
-* **Custom domain (optional):** Netlify → Domain management → add domain.
+---
+
+## Option B: full stack (Render + Netlify)
+
+Use this when you want the real FastAPI backend and a shared database.
+
+### B1. Backend and database on Render
+1. Put the code on GitHub, then create a free account at render.com (sign up with GitHub).
+2. **New → PostgreSQL** (Free plan). Copy its **Internal Database URL**.
+3. **New → Web Service**, pick the repo, then set:
+   - Root Directory: `backend`
+   - Build Command: `pip install -r requirements-postgres.txt`
+   - Start Command: `python -m scripts.bootstrap && uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+   - Instance type: Free
+4. Environment variables (use **Add from .env**): `PYTHON_VERSION=3.12.4`, `APP_ENV=production`, `DEMO_MODE=true` (one-click roles, synthetic data only), `CORS_ORIGINS=https://example.netlify.app`, `SEED_ADMIN_USERNAME=admin`, the three `SEED_*_PASSWORD` values, `DATABASE_URL` (the URL from step 2) and a `SECRET_KEY` of at least 32 random characters.
+5. Deploy and open `https://<your-service>.onrender.com/api/health`; it should answer `{"status":"ok",...}`. On first start the app migrates the database, loads the synthetic demo data once, and trains the optional ML model.
+
+(`render.yaml` in the repository describes the same service and database as a Blueprint.)
+
+### B2. Frontend on Netlify, pointing at the API
+Build the frontend **without** the static flag and add a rewrite that sends `/api/*` to Render. Create `frontend/public/_redirects` containing
+
+```
+/api/*  https://<your-service>.onrender.com/api/:splat  200
+/*      /index.html                                     200
+```
+
+and in the Netlify site settings set `VITE_STATIC_DEMO` to `false` (or delete it from `netlify.toml`), then build and deploy as in Option A.
+
+### Things to know (Option B)
+* Render's free web service sleeps after about 15 minutes idle; the first request then takes 30 to 60 seconds.
+* Render's free PostgreSQL is time-limited. For a longer-lived demo use a free database at neon.tech and set `DATABASE_URL` to its connection string.
+* Reset the demo data from Render's Shell with `python -m scripts.seed --reset`.
+* Anyone with the link can use demo mode, so keep real data out of it.

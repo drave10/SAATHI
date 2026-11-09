@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ClipboardList, HeartHandshake, LineChart, LockKeyhole, Settings2, ShieldCheck, Users } from 'lucide-react'
 import { useAuth } from '../auth/AuthContext'
-import { api, errorMessage } from '../api/client'
+import { STATIC_DEMO, api, errorMessage } from '../api/client'
 import { Banner, Field } from '../components/ui'
 import { Logo } from '../components/Layout'
 
@@ -91,6 +91,7 @@ export default function Login() {
           <button className="mt-4 text-sm font-medium text-teal-700 hover:underline" onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(null) }}>
             {mode === 'login' ? 'I have an invitation code' : 'Back to sign in'}
           </button>
+          {STATIC_DEMO && <p className="mt-4 text-xs text-slate-500">Static demo: or sign in with a sample username (<code>admin</code>, <code>caseworker1</code>, <code>ben001</code>) and password <code>Demo-pass-1</code>. Nothing leaves your browser.</p>}
           <div className="mt-8 flex gap-3 rounded-lg bg-slate-100 p-3 text-xs text-slate-600">
             <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-navy-600" aria-hidden />
             <p>SAATHI is a decision-support prototype and does not diagnose any condition. If you are in immediate danger, contact your local emergency number (112 in India).</p>

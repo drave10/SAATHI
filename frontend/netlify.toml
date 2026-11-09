@@ -1,18 +1,14 @@
-# Used when Netlify builds from Git. (The public/_redirects file does the same for drag-and-drop deploys.)
+# Netlify config for the SELF-CONTAINED static demo (no backend needed).
+# Netlify: Import from Git -> base directory "frontend" (settings below are picked up automatically).
 [build]
   command = "npm run build"
   publish = "dist"
 
 [build.environment]
   NODE_VERSION = "22"
+  VITE_STATIC_DEMO = "true"
 
-# Proxy API calls to the Render backend so the browser sees a single origin. Edit the hostname if your Render URL differs.
-[[redirects]]
-  from = "/api/*"
-  to = "https://saathi-api.onrender.com/api/:splat"
-  status = 200
-  force = true
-
+# Single-page-app fallback so deep links such as /app/cases work.
 [[redirects]]
   from = "/*"
   to = "/index.html"
