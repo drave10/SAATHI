@@ -5,7 +5,7 @@
 |---|---|---|---|
 | Engine unit tests | pytest | `backend/tests/test_engine.py` (17) | Each rule: routine/attention/urgent, critical self-harm item (even with sparse data), missing-data handling, exclusion of unanswered items from scores, help-request levels, rise/sharp-rise/persistence, configurability, config validation, no demographic inputs, ML optional |
 | API / integration | pytest + FastAPI `TestClient` on a temporary SQLite DB seeded with the real seed function | `backend/tests/test_api.py` (31) | Auth (login, bad login, lockout, logout revokes token, change password, invitation-only registration with consent), **RBAC** (role gates, caseworker isolation → 404, admin cannot read clinical content, beneficiary cannot read others), assessment workflow (consent gate, validation, save/resume, submit, double submit 409, urgent alert + resources, beneficiary never sees review level), follow-ups, interventions, notes, case list filters/sort/pagination, caseworker dashboard, admin analytics (aggregate-only, small-cell suppression), user management, assignment, engine-config validation, resources, audit log, consent/export/erasure, retention, headers, error format, seed requirements |
-| Frontend unit | Vitest + Testing Library | `frontend/src/test/app.test.tsx` (7) | Priority badge wording, pagination, empty state, error-message mapping, login shows server error (no fake success), consent gating of registration, non-diagnostic disclaimer |
+| Frontend unit | Vitest + Testing Library | `frontend/src/test/app.test.tsx` (15) and `frontend/src/demo/demo.test.ts` (11) | Priority badge wording, pagination, empty state, error-message mapping, login shows server error (no fake success), consent gating of registration, non-diagnostic disclaimer |
 | End-to-end | Playwright (system Edge/Chrome) | `frontend/e2e/*.spec.ts` (37) | Bad login error; full beneficiary check-in with a critical answer → support panel (no risk label) → caseworker sees notification and explanation; UI + API role restriction; admin analytics shows no identifiers |
 
 ## Method
@@ -18,7 +18,7 @@
 | Suite | Result |
 |---|---|
 | `pytest` (backend) | **48 passed** |
-| `vitest run` | **7 passed** |
+| `vitest run` | **26 passed** (15 UI/login incl. the demo-only login page and its retry behaviour, 11 in-browser API) |
 | `tsc -b` (type check) | no errors |
 | `npm run build` | succeeds |
 | `playwright test` | **37 end-to-end tests**, see "Frontend–backend integration audit" below (Microsoft Edge channel) |
@@ -32,7 +32,7 @@ Phase 2 runs after a server restart and checks persistence and erasure cascades.
 Docker build/compose; automated accessibility checks (axe) and cross-browser runs; load/performance tests; penetration testing; mobile layout was
 checked visually once at 375 px width (hamburger header) but not by automated tests.
 
-## Frontend�backend integration audit (9 Nov 2026)
+## Frontend�backend integration audit (9 Nov 2026)
 Scope: every user workflow driven through the real UI against the real API and database (no mocked endpoints except where a test deliberately injects a network failure, a 500/403 or latency to prove error/loading handling).
 
 | Spec | Covers |
@@ -49,3 +49,6 @@ Defects found and fixed during this audit:
 The remaining mock-like content search (`mock|fake|dummy|lorem|Math.random`, literal record arrays) found nothing else in `frontend/src`; only Vitest tests use a mocked network call, on purpose.
 
 Test-infrastructure note: triggering a real file download in Edge (Playwright `channel: msedge`) leaves the browser unable to open new tabs for later tests, so the export test captures the generated blob link instead of saving a file.
+
+## Demo-only login (added 11 Nov 2026)
+The login page is demo-only by default (`VITE_LOGIN_MODE` unset): exactly three buttons (Beneficiary, Caseworker, Admin), a "Demo prototype" notice, no username/password/registration. `VITE_LOGIN_MODE=full` restores the normal sign-in form; the full-stack Playwright config starts its dev server in that mode. Checked by Vitest (both modes, progress/error/auto-retry while a sleeping server wakes up), by the static-build Playwright suite (6 tests) and by a run of the three roles against the real local backend.

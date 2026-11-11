@@ -26,7 +26,7 @@ There are two ways to host it. **Option A needs only Netlify and no server.**
 No-Git alternative: on your PC run `cd frontend`, `npm ci`, then build with the demo flag
 (PowerShell: `$env:VITE_STATIC_DEMO="true"; npm run build`) and drag the `frontend/dist` folder onto Netlify's **Add new site → Deploy manually** page.
 
-Reviewers click **Beneficiary**, **Caseworker** or **Admin** on the login page, or sign in with `admin`, `caseworker1`..`caseworker5` or `ben001`..`ben025` and the password `Demo-pass-1`. A banner explains that data stays in their own browser; **Reset demo data** restores the sample data.
+The login page is **demo-only**: visitors click **Beneficiary**, **Caseworker** or **Admin**, with no username or password, under a clear "Demo prototype" notice. A banner explains that data stays in their own browser; **Reset demo data** restores the sample data.
 
 Local check before deploying: `$env:VITE_STATIC_DEMO="true"; npm run build; npx vite preview`.
 
@@ -58,6 +58,9 @@ Build the frontend **without** the static flag and add a rewrite that sends `/ap
 ```
 
 and in the Netlify site settings set `VITE_STATIC_DEMO` to `false` (or delete it from `netlify.toml`), then build and deploy as in Option A.
+
+### Login mode
+The frontend login page is demo-only (three role buttons, no username or password) unless built with `VITE_LOGIN_MODE=full`, which restores the normal username/password form and invitation-code registration for real deployments. The demo buttons call `POST /api/auth/demo-login`, so the backend needs `DEMO_MODE=true`. The first click after the free Render server has been idle can take up to a minute; the page shows a progress message.
 
 ### Things to know (Option B)
 * Render's free web service sleeps after about 15 minutes idle; the first request then takes 30 to 60 seconds.

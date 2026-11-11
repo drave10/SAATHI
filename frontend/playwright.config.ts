@@ -13,5 +13,6 @@ export default defineConfig({
   workers: 1,
   reporter: [['list']],
   use: { baseURL: process.env.E2E_BASE_URL ?? 'http://localhost:5173', ...(channel === 'chromium' ? {} : { channel }), trace: 'retain-on-failure', screenshot: 'only-on-failure' },
-  webServer: { command: 'npm run dev', url: 'http://localhost:5173', reuseExistingServer: true, timeout: 60_000 },
+  // These tests use the normal username/password form, so the dev server runs in full-login mode (the default build is demo-only).
+  webServer: { command: 'npm run dev', url: 'http://localhost:5173', reuseExistingServer: false, timeout: 60_000, env: { VITE_LOGIN_MODE: 'full' } },
 })

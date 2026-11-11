@@ -86,7 +86,8 @@ test.describe('beneficiary workflows (real backend)', () => {
     await page.getByLabel('Current password').fill('not-the-password-1')
     await page.getByLabel('New password').fill('Another-pass-9')
     await page.getByRole('button', { name: 'Update password' }).click()
-    await expect(page.getByRole('alert')).toContainText('Current password is incorrect')
+    // The backend refuses password changes on the shared synthetic demo accounts (DEMO_MODE=true) and otherwise reports a wrong current password.
+    await expect(page.getByRole('alert')).toContainText(/Current password is incorrect|Password changes are disabled for the shared demo accounts/)
     await expect(page.getByText(/Privacy notice/)).toBeVisible()
   })
 

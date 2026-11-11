@@ -1,10 +1,10 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
-import { vi } from 'vitest'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { afterEach, beforeEach, vi } from 'vitest'
 import { AuthProvider } from '../auth/AuthContext'
 import { api, errorMessage } from '../api/client'
 import { Pagination, PriorityBadge, EmptyState } from '../components/ui'
-import Login from '../pages/Login'
+import Login, { DemoLogin } from '../pages/Login'
 
 const wrap = (ui: JSX.Element) => render(<MemoryRouter><AuthProvider>{ui}</AuthProvider></MemoryRouter>)
 
@@ -47,8 +47,82 @@ describe('errorMessage', () => {
   })
 })
 
-describe('login page', () => {
+describe('demo-only login page (the default)', () => {
+  beforeEach(() => { vi.restoreAllMocks(); vi.spyOn(api, 'get').mockResolvedValue({ data: { demo_mode: true } } as any) })
+
+  it('offers exactly the three roles: no username, no password, no registration', () => {
+    wrap(<Login />)
+    for (const n of ['Beneficiary', 'Caseworker', 'Admin']) expect(screen.getByRole('button', { name: n })).toBeInTheDocument()
+    expect(screen.getAllByRole('button')).toHaveLength(3)
+    expect(screen.queryByLabelText('Username')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Password')).not.toBeInTheDocument()
+    expect(screen.queryByText(/invitation code/i)).not.toBeInTheDocument()
+    expect(screen.getByText(/No username or password is needed/)).toBeInTheDocument()
+  })
+
+  it('says clearly that it is a demo prototype with synthetic data, and is not diagnostic', () => {
+    wrap(<Login />)
+    expect(screen.getByRole('note')).toHaveTextContent(/Demo prototype/)
+    expect(screen.getByRole('note')).toHaveTextContent(/synthetic sample data/)
+    expect(screen.getByText(/does not diagnose any condition/)).toBeInTheDocument()
+  })
+
+  it('signs in through the demo-login endpoint and opens the app', async () => {
+    const post = vi.spyOn(api, 'post').mockResolvedValueOnce({ data: { access_token: 't', token_type: 'bearer', user: { id: 1, username: 'admin', display_name: 'Demo Administrator', role: 'admin', is_active: true, is_synthetic: true, created_at: '', last_login_at: null } } } as any)
+    render(<MemoryRouter initialEntries={['/']}><AuthProvider><Routes><Route path="/" element={<Login />} /><Route path="/app" element={<div>APP HOME</div>} /></Routes></AuthProvider></MemoryRouter>)
+    fireEvent.click(screen.getByRole('button', { name: 'Admin' }))
+    await waitFor(() => expect(screen.getByText('APP HOME')).toBeInTheDocument())
+    expect(post).toHaveBeenCalledWith('/auth/demo-login', { role: 'admin' }, { timeout: 90000 })
+  })
+
+  it('shows progress while signing in, then a readable error (and re-enables the buttons) if the server fails', async () => {
+    let fail!: (e: unknown) => void
+    vi.spyOn(api, 'post').mockReturnValueOnce(new Promise((_r, rej) => { fail = rej }) as any)
+    wrap(<Login />)
+    fireEvent.click(screen.getByRole('button', { name: 'Caseworker' }))
+    expect(await screen.findByRole('status')).toHaveTextContent(/Opening the caseworker view/)
+    expect(screen.getByRole('button', { name: 'Admin' })).toBeDisabled()
+    fail({ response: { status: 404, data: { detail: 'Demo account is not available' } } })
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Demo account is not available'))
+    expect(screen.getByRole('button', { name: 'Admin' })).toBeEnabled()
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+  })
+
+  it('keeps retrying while the server wakes up, then signs in', async () => {
+    const user = { id: 1, username: 'ben001', display_name: 'Debashish', role: 'beneficiary', is_active: true, is_synthetic: true, created_at: '', last_login_at: null }
+    const post = vi.spyOn(api, 'post')
+      .mockRejectedValueOnce({ response: { status: 504, data: {} } })
+      .mockRejectedValueOnce({ response: undefined })
+      .mockResolvedValueOnce({ data: { access_token: 't', token_type: 'bearer', user } } as any)
+    render(<MemoryRouter initialEntries={['/']}><AuthProvider><Routes><Route path="/" element={<DemoLogin retryDelayMs={5} />} /><Route path="/app" element={<div>APP HOME</div>} /></Routes></AuthProvider></MemoryRouter>)
+    fireEvent.click(screen.getByRole('button', { name: 'Beneficiary' }))
+    await waitFor(() => expect(screen.getByText('APP HOME')).toBeInTheDocument())
+    expect(post).toHaveBeenCalledTimes(3)
+  })
+
+  it('does not retry real refusals (for example demo access switched off)', async () => {
+    const post = vi.spyOn(api, 'post').mockRejectedValue({ response: { status: 404, data: { detail: 'Not found' } } })
+    wrap(<DemoLogin retryDelayMs={5} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Admin' }))
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Not found'))
+    expect(post).toHaveBeenCalledTimes(1)
+  })
+
+  it('reports an unreachable server after the retries instead of failing silently', async () => {
+    const post = vi.spyOn(api, 'post').mockRejectedValue({ response: undefined })
+    wrap(<DemoLogin retryDelayMs={5} maxAttempts={3} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Beneficiary' }))
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(/Cannot reach the server/))
+    expect(post).toHaveBeenCalledTimes(3)
+    expect(screen.getByRole('button', { name: 'Admin' })).toBeEnabled()
+  })
+})
+describe('full login page (VITE_LOGIN_MODE=full, used for real deployments)', () => {
+  beforeEach(() => { vi.restoreAllMocks(); vi.stubEnv('VITE_LOGIN_MODE', 'full') })
+  afterEach(() => { vi.unstubAllEnvs() })
+
   it('shows a server error message on failed sign-in (no fake success)', async () => {
+    vi.spyOn(api, 'get').mockRejectedValue({ response: undefined })
     vi.spyOn(api, 'post').mockRejectedValueOnce({ response: { status: 401, data: { detail: 'Incorrect username or password' } } })
     wrap(<Login />)
     fireEvent.change(screen.getByLabelText('Username'), { target: { value: 'x' } })
@@ -58,6 +132,7 @@ describe('login page', () => {
   })
 
   it('requires both mandatory consents before registration is enabled', () => {
+    vi.spyOn(api, 'get').mockRejectedValue({ response: undefined })
     wrap(<Login />)
     fireEvent.click(screen.getByText('I have an invitation code'))
     const submit = screen.getByRole('button', { name: 'Create account' })
@@ -67,27 +142,16 @@ describe('login page', () => {
     expect(submit).toBeEnabled()
   })
 
-  it('states that the tool is not diagnostic', () => {
+  it('shows one-click role buttons when the backend says demo mode is on', async () => {
+    vi.spyOn(api, 'get').mockResolvedValue({ data: { demo_mode: true } } as any)
     wrap(<Login />)
-    expect(screen.getByText(/does not diagnose any condition/)).toBeInTheDocument()
-  })
-})
-
-describe('demo mode', () => {
-  it('shows one-click role buttons only when the backend says demo mode is on, and uses the demo-login endpoint', async () => {
-    vi.spyOn(api, 'get').mockResolvedValueOnce({ data: { demo_mode: true } } as any)
-    const post = vi.spyOn(api, 'post').mockRejectedValueOnce({ response: { status: 404, data: { detail: 'Demo account is not available' } } })
-    wrap(<Login />)
-    const btn = await screen.findByRole('button', { name: 'Caseworker' })
-    fireEvent.click(btn)
-    await waitFor(() => expect(post).toHaveBeenCalledWith('/auth/demo-login', { role: 'caseworker' }))
-    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Demo account is not available'))
+    expect(await screen.findByRole('button', { name: 'Caseworker' })).toBeInTheDocument()
   })
 
-  it('hides the buttons when demo mode is off', async () => {
-    vi.spyOn(api, 'get').mockResolvedValueOnce({ data: { demo_mode: false } } as any)
+  it('hides the one-click buttons when demo mode is off', async () => {
+    const get = vi.spyOn(api, 'get').mockResolvedValue({ data: { demo_mode: false } } as any)
     wrap(<Login />)
-    await waitFor(() => expect(api.get).toHaveBeenCalled())
+    await waitFor(() => expect(get).toHaveBeenCalled())
+    await new Promise((r) => setTimeout(r, 50))
     expect(screen.queryByRole('button', { name: 'Caseworker' })).not.toBeInTheDocument()
-  })
-})
+  })})

@@ -10,7 +10,7 @@ const noNetworkApi = (page: Page) => expect((page as any).__api).toEqual([])
 
 async function leave(page: Page) {
   await page.getByRole('button', { name: 'Log out' }).first().click()
-  await expect(page.getByRole('heading', { name: 'Sign in to SAATHI' })).toBeVisible()   // logout is asynchronous in the demo server too
+  await expect(page.getByRole('heading', { name: 'Try the SAATHI demo' })).toBeVisible()   // logout is asynchronous in the demo server too
 }
 
 async function enter(page: Page, role: 'Beneficiary' | 'Caseworker' | 'Admin') {
@@ -19,10 +19,10 @@ async function enter(page: Page, role: 'Beneficiary' | 'Caseworker' | 'Admin') {
   await expect(page).toHaveURL(/\/app/)
 }
 
-test('one-click roles land on the right dashboards, with the static-demo banner and no network API calls', async ({ page }) => {
+test('one-click roles land on the right dashboards, with the demo-prototype banner and no network API calls', async ({ page }) => {
   await enter(page, 'Beneficiary')
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Hello, Debashish')
-  await expect(page.getByText('Static demo.')).toBeVisible()
+  await expect(page.getByText('Demo prototype.').first()).toBeVisible()
   await leave(page)
   await enter(page, 'Caseworker')
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Caseworker dashboard')
@@ -33,17 +33,22 @@ test('one-click roles land on the right dashboards, with the static-demo banner 
   noNetworkApi(page)
 })
 
-test('typed login works with the sample password and rejects a wrong one', async ({ page }) => {
+test('login page is demo-only: exactly three roles, a demo-prototype notice, no username/password/registration', async ({ page }) => {
   await page.goto('/')
-  await page.getByLabel('Username').fill('caseworker2'); await page.getByLabel('Password').fill('wrong')
-  await page.getByRole('button', { name: 'Sign in' }).click()
-  await expect(page.getByRole('alert')).toContainText('Incorrect username or password')
-  await page.getByLabel('Password').fill('Demo-pass-1')
-  await page.getByRole('button', { name: 'Sign in' }).click()
+  await expect(page.getByRole('heading', { name: 'Try the SAATHI demo' })).toBeVisible()
+  await expect(page.getByRole('note').first()).toContainText('Demo prototype')
+  await expect(page.getByRole('note').first()).toContainText('synthetic sample data')
+  for (const r of ['Beneficiary', 'Caseworker', 'Admin']) await expect(page.getByRole('button', { name: r, exact: true })).toBeVisible()
+  await expect(page.getByRole('button')).toHaveCount(3)
+  await expect(page.getByLabel('Username')).toHaveCount(0)
+  await expect(page.getByLabel('Password')).toHaveCount(0)
+  await expect(page.getByText(/invitation code/i)).toHaveCount(0)
+  await expect(page.getByText(/does not diagnose any condition/)).toBeVisible()
+  // anyone can enter, and the shell keeps reminding them it is a demo
+  await page.getByRole('button', { name: 'Caseworker', exact: true }).click()
   await expect(page).toHaveURL(/\/app/)
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('Caseworker dashboard')
+  await expect(page.getByRole('note').first()).toContainText('Demo prototype')
 })
-
 test('beneficiary check-in with a critical answer shows support; caseworker sees the new urgent notification; data survives reload', async ({ page }) => {
   await enter(page, 'Beneficiary')
   await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Check-in' }).click()

@@ -79,7 +79,7 @@ test('admin sees aggregate analytics only', async ({ page }) => {
 })
 
 test('demo mode: one click per role, no password, and one visitor logging out does not sign out another', async ({ browser }) => {
-  const heading: Record<string, RegExp> = { Beneficiary: /Hello, Participant/, Caseworker: /Caseworker dashboard/, Admin: /Administration/ }
+  const heading: Record<string, RegExp> = { Beneficiary: /Hello, /, Caseworker: /Caseworker dashboard/, Admin: /Administration/ }
   for (const role of ['Beneficiary', 'Caseworker', 'Admin']) {
     const page = await (await browser.newContext({ baseURL: 'http://localhost:5173' })).newPage()
     await page.goto('/')

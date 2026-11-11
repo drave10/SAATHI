@@ -10,6 +10,7 @@
 [build.environment]
   NODE_VERSION = "22"
   VITE_STATIC_DEMO = "false"
+  VITE_LOGIN_MODE = "demo"
 
 # Send API calls to the Render backend so the browser only ever talks to one origin (no CORS needed).
 [[redirects]]

@@ -6,6 +6,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../auth/AuthContext'
 import { STATIC_DEMO } from '../api/client'
+import { loginMode } from '../auth/loginMode'
 import { resetDemo } from '../demo/server'
 import type { Role } from '../types'
 
@@ -88,9 +89,14 @@ export default function Layout() {
         <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-slate-200 bg-white/90 px-4 backdrop-blur lg:hidden">
           <button className="btn-ghost p-2" onClick={() => setOpen(true)} aria-label="Open menu"><Menu className="h-5 w-5" /></button><Logo />
         </header>
+        {!STATIC_DEMO && loginMode() === 'demo' && (
+          <div role="note" className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-900 sm:px-6">
+            <strong>Demo prototype.</strong> All data is synthetic sample data shared by every visitor and may be reset at any time. Please do not enter real personal information.
+          </div>
+        )}
         {STATIC_DEMO && (
           <div role="note" className="flex flex-wrap items-center justify-between gap-2 border-b border-teal-200 bg-teal-50 px-4 py-2 text-xs text-teal-900 sm:px-6">
-            <span><strong>Static demo.</strong> Everything runs in your browser with synthetic sample data; changes are saved on this device only.</span>
+            <span><strong>Demo prototype.</strong> Everything runs in your browser with synthetic sample data; changes are saved on this device only.</span>
             <button className="font-semibold underline" onClick={async () => { resetDemo(); await logout(); nav('/') ; location.reload() }}>Reset demo data</button>
           </div>
         )}

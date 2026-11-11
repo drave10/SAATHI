@@ -36,7 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const demoLogin = useCallback(async (role: Role) => {
-    const r = await api.post('/auth/demo-login', { role })
+    const r = await api.post('/auth/demo-login', { role }, { timeout: 90000 })   // a sleeping free-tier server can take up to a minute
     tokenStore.set(r.data.access_token); setUser(r.data.user)
     return r.data.user as User
   }, [])

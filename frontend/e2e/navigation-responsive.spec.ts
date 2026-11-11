@@ -48,7 +48,12 @@ test.describe('navigation', () => {
   })
 
   test('session revoked on the server logs the user out on the next request', async ({ page, request }) => {
-    await login(page, 'ben004', PW.ben())
+    // Uses a freshly registered (non-synthetic) account: in demo mode the shared synthetic accounts are deliberately exempt from token revocation.
+    const adminToken = await apiToken(request, 'admin', PW.admin())
+    const inv = await (await request.post('/api/admin/invitations', { headers: auth(adminToken), data: { org_unit: 'Demo Unit West', valid_days: 1 } })).json()
+    const uname = `e2e_rev_${Date.now() % 100000}`
+    expect((await request.post('/api/auth/register', { data: { invite_code: inv.code, username: uname, password: 'E2E-pass-12345', display_name: 'Revoke Me', consent_privacy: true, consent_assessment: true } })).status()).toBe(201)
+    await login(page, uname, 'E2E-pass-12345')
     const token = await page.evaluate(() => sessionStorage.getItem('saathi.token'))
     expect((await request.post('/api/auth/logout', { headers: { Authorization: `Bearer ${token}` } })).status()).toBe(204)
     await page.getByRole('link', { name: 'History' }).click()
