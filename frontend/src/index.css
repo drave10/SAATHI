@@ -4,24 +4,96 @@
 @tailwind utilities;
 
 @layer base {
-  html { @apply bg-slate-50 text-slate-800 antialiased; }
-  body { @apply min-h-screen font-sans; font-feature-settings: 'cv11', 'ss01'; }
+  html { @apply bg-slate-50 text-slate-800 antialiased; scroll-behavior: smooth; }
+  body {
+    @apply min-h-screen font-sans;
+    font-feature-settings: 'cv11', 'ss01';
+    /* soft, fixed colour wash behind every page */
+    background:
+      radial-gradient(900px 500px at 100% -10%, rgba(37, 157, 147, 0.07), transparent 60%),
+      radial-gradient(800px 500px at -10% 110%, rgba(45, 79, 132, 0.07), transparent 60%),
+      #f8fafc;
+    background-attachment: fixed;
+  }
   h1, h2, h3 { @apply text-navy-800 tracking-tight; }
   :focus-visible { @apply outline-2 outline-offset-2 outline-teal-500; outline-style: solid; }
+  ::selection { background: rgba(37, 157, 147, 0.25); }
+
+  /* quiet, consistent motion on the things people touch */
+  tbody tr { transition: background-color 0.15s ease; }
+  tbody tr:hover { background-color: rgba(238, 250, 248, 0.6); }
+  [role='tab'] { transition: color 0.2s ease, border-color 0.25s ease, background-color 0.2s ease, box-shadow 0.2s ease; }
+  [role='switch'], [role='switch'] > * { transition-duration: 0.25s; }
+  article { transition: box-shadow 0.25s ease, border-color 0.25s ease, translate 0.25s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  article:hover { translate: 0 -2px; box-shadow: 0 10px 28px -12px rgba(10, 26, 53, 0.22); }
 }
 
 @layer components {
-  .card { @apply min-w-0 rounded-xl border border-slate-200 bg-white shadow-card; }
-  .input { @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 disabled:bg-slate-100; }
+  .card {
+    @apply min-w-0 rounded-2xl border border-slate-200/80 bg-white shadow-card;
+    transition: box-shadow 0.25s ease, border-color 0.25s ease;
+    animation: rise-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+  }
+  .card:hover { box-shadow: 0 2px 4px rgba(10, 26, 53, 0.04), 0 12px 32px -14px rgba(10, 26, 53, 0.18); }
+  /* cards that sit side by side arrive one after another */
+  .grid > .card:nth-child(2), .grid > * > .card:nth-child(2), .space-y-6 > .card:nth-child(2) { animation-delay: 0.06s; }
+  .grid > .card:nth-child(3), .space-y-6 > .card:nth-child(3) { animation-delay: 0.12s; }
+  .grid > .card:nth-child(4), .space-y-6 > .card:nth-child(4) { animation-delay: 0.18s; }
+  .grid > .card:nth-child(5) { animation-delay: 0.24s; }
+  .grid > .card:nth-child(6) { animation-delay: 0.3s; }
+  .grid > .card:nth-child(7) { animation-delay: 0.36s; }
+  .grid > .card:nth-child(8) { animation-delay: 0.42s; }
+
+  /* lift on hover: only for self-contained tiles (never wraps a dialog) */
+  .lift { transition: translate 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s ease, border-color 0.25s ease, background-color 0.2s ease; }
+  .lift:hover { translate: 0 -3px; box-shadow: 0 14px 34px -14px rgba(10, 26, 53, 0.28); }
+
+  .input { @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 transition placeholder:text-slate-400 hover:border-slate-400 focus:border-teal-500 focus:ring-2 focus:ring-teal-200 disabled:bg-slate-100; }
   .label { @apply mb-1 block text-sm font-medium text-slate-700; }
   /* sr-only (absolutely positioned) cells inside scroll containers must be contained, or they widen the whole page on phones */
   .overflow-x-auto { @apply relative; }
-  .btn { @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50; }
-  .btn-primary { @apply btn bg-navy-700 text-white hover:bg-navy-800; }
-  .btn-teal { @apply btn bg-teal-600 text-white hover:bg-teal-700; }
-  .btn-secondary { @apply btn border border-slate-300 bg-white text-slate-700 hover:bg-slate-50; }
-  .btn-danger { @apply btn bg-red-600 text-white hover:bg-red-700; }
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100; }
+  .btn-primary { @apply btn bg-gradient-to-b from-navy-600 to-navy-700 text-white shadow-sm hover:from-navy-700 hover:to-navy-800 hover:shadow-md; }
+  .btn-teal { @apply btn bg-gradient-to-b from-teal-500 to-teal-600 text-white shadow-sm hover:from-teal-600 hover:to-teal-700 hover:shadow-md hover:shadow-teal-600/20; }
+  .btn-secondary { @apply btn border border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50; }
+  .btn-danger { @apply btn bg-red-600 text-white shadow-sm hover:bg-red-700 hover:shadow-md; }
   .btn-ghost { @apply btn text-slate-600 hover:bg-slate-100; }
   .th { @apply px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500; }
   .td { @apply px-4 py-3 text-sm; }
+
+  /* loading placeholder */
+  .skeleton { @apply rounded-lg bg-slate-200/70; background-image: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent); background-size: 200% 100%; background-repeat: no-repeat; animation: shimmer 1.4s ease-in-out infinite; }
+}
+
+@layer utilities {
+  /* Entry animations fill backwards only: once finished they leave no transform behind, so they never trap fixed-position dialogs. */
+  .animate-rise { animation: rise-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
+  .animate-fade { animation: fade-in 0.25s ease backwards; }
+  .animate-pop { animation: pop-in 0.28s cubic-bezier(0.2, 0.9, 0.2, 1.1) backwards; }
+  .animate-slide-in { animation: slide-in 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
+  .animate-drop { animation: drop-in 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
+  .animate-check { animation: check-pop 0.6s cubic-bezier(0.2, 0.9, 0.2, 1.2) backwards; }
+  .animate-float { animation: float 9s ease-in-out infinite; }
+  .animate-float-slow { animation: float 14s ease-in-out infinite reverse; }
+  .stagger > * { animation: rise-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
+  .stagger > *:nth-child(2) { animation-delay: 0.07s; }
+  .stagger > *:nth-child(3) { animation-delay: 0.14s; }
+  .stagger > *:nth-child(4) { animation-delay: 0.21s; }
+  .stagger > *:nth-child(5) { animation-delay: 0.28s; }
+  .stagger > *:nth-child(6) { animation-delay: 0.35s; }
+}
+
+@keyframes rise-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pop-in { from { opacity: 0; transform: translateY(8px) scale(0.96); } to { opacity: 1; transform: none; } }
+@keyframes slide-in { from { opacity: 0.6; transform: translateX(-100%); } to { opacity: 1; transform: none; } }
+@keyframes drop-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+@keyframes check-pop { 0% { opacity: 0; transform: scale(0.4) rotate(-12deg); } 60% { opacity: 1; transform: scale(1.12); } 100% { transform: none; } }
+@keyframes float { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(18px, -22px) scale(1.06); } }
+@keyframes shimmer { from { background-position: 150% 0; } to { background-position: -50% 0; } }
+
+/* Respect people who ask their device for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+  .lift:hover, article:hover { translate: none; }
 }

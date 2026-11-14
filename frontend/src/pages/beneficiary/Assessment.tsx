@@ -76,7 +76,7 @@ export default function Assessment() {
     return (
       <div className="mx-auto max-w-2xl space-y-6">
         <div className="card p-8 text-center">
-          <CheckCircle2 className="mx-auto h-12 w-12 text-teal-600" aria-hidden />
+          <span className="animate-check mx-auto grid h-16 w-16 place-items-center rounded-full bg-teal-50 ring-8 ring-teal-50/60"><CheckCircle2 className="h-10 w-10 text-teal-600" aria-hidden /></span>
           <h1 className="mt-4 text-2xl font-semibold">Thank you for checking in</h1>
           <p className="mt-2 text-slate-600">{result.message}</p>
           {result.wellbeing_index != null && <p className="mt-4 text-sm text-slate-500">Your well-being score for this check-in: <strong className="text-navy-800">{result.wellbeing_index}</strong> / 100 (higher is better)</p>}
@@ -114,7 +114,7 @@ export default function Assessment() {
             <li>You can skip the optional text box and pause at any time — your progress is saved.</li>
             <li>Your answers are seen only by your authorised support worker.</li>
           </ul>
-          <label className="mt-6 flex gap-3 rounded-lg border border-slate-200 p-3 text-sm">
+          <label className="mt-6 flex cursor-pointer gap-3 rounded-xl border border-slate-200 p-3 text-sm transition hover:border-teal-300 hover:bg-teal-50/40">
             <input type="checkbox" className="mt-1" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
             <span>I understand what this check-in is for, and I agree to my answers being stored and reviewed by my support worker. <strong>(required)</strong></span>
           </label>
@@ -135,9 +135,9 @@ export default function Assessment() {
     <div className="mx-auto max-w-2xl">
       <PageHeader title={q.title} subtitle={`Section ${step + 1} of ${sections.length}`} />
       {resumed && step === 0 && <div className="mb-4"><Banner kind="success">Welcome back — your saved answers have been restored.</Banner></div>}
-      <div className="mb-6" aria-label="Progress"><div className="h-2 overflow-hidden rounded-full bg-slate-200"><div className="h-full bg-teal-500 transition-all" style={{ width: `${(answered / total) * 100}%` }} /></div><p className="mt-1 text-xs text-slate-500">{answered} of {total} questions answered</p></div>
+      <div className="mb-6" aria-label="Progress"><div className="h-2.5 overflow-hidden rounded-full bg-slate-200"><div className="h-full rounded-full bg-gradient-to-r from-teal-500 to-teal-300 transition-all duration-500 ease-out" style={{ width: `${(answered / total) * 100}%` }} /></div><p className="mt-1 text-xs text-slate-500">{answered} of {total} questions answered</p></div>
       <Card title={sec.title}>
-        <div className="space-y-8">
+        <div key={step} className="stagger space-y-8">
           {sec.items.map((it) => (
             <fieldset key={it.id}>
               <legend className="text-sm font-medium text-slate-800">{it.text}{!it.required && <span className="ml-1 text-slate-400">(optional)</span>}</legend>
@@ -147,7 +147,7 @@ export default function Assessment() {
                   {it.options.map((o) => {
                     const sel = answers[it.id] === o.value
                     return (
-                      <label key={o.value} className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 text-sm transition-colors ${sel ? 'border-teal-500 bg-teal-50 text-teal-900' : 'border-slate-200 hover:bg-slate-50'}`}>
+                      <label key={o.value} className={`flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-2.5 text-sm transition-all duration-200 active:scale-[0.98] ${sel ? 'border-teal-500 bg-teal-50 text-teal-900 shadow-[0_0_0_3px_rgba(37,157,147,0.15)]' : 'border-slate-200 hover:border-teal-300 hover:bg-slate-50'}`}>
                         <input type="radio" name={it.id} className="accent-teal-600" checked={sel} onChange={() => set(it.id, o.value)} /> {o.label}
                       </label>
                     )

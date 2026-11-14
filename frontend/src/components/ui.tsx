@@ -22,15 +22,18 @@ export function useFetch<T>(fn: () => Promise<T>, deps: unknown[] = []) {
 /* ---------- status blocks ---------- */
 export function Spinner({ label = 'Loading…' }: { label?: string }) {
   return (
-    <div role="status" className="flex items-center justify-center gap-2 py-12 text-sm text-slate-500">
-      <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> {label}
+    <div role="status" className="animate-fade space-y-4 py-6">
+      <div className="flex items-center justify-center gap-2 text-sm text-slate-500"><Loader2 className="h-4 w-4 animate-spin text-teal-600" aria-hidden /> {label}</div>
+      <div className="mx-auto grid max-w-3xl gap-3" aria-hidden>
+        <div className="skeleton h-4 w-2/5" /><div className="skeleton h-20" /><div className="grid grid-cols-3 gap-3"><div className="skeleton h-14" /><div className="skeleton h-14" /><div className="skeleton h-14" /></div>
+      </div>
     </div>
   )
 }
 
 export function ErrorState({ message, onRetry }: { message: string; onRetry?: () => void }) {
   return (
-    <div role="alert" className="flex flex-col items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-8 text-center">
+    <div role="alert" className="animate-rise flex flex-col items-center gap-3 rounded-2xl border border-red-200 bg-red-50 p-8 text-center">
       <AlertTriangle className="h-6 w-6 text-red-600" aria-hidden />
       <p className="text-sm text-red-800">{message}</p>
       {onRetry && <button className="btn-secondary" onClick={onRetry}>Try again</button>}
@@ -40,8 +43,8 @@ export function ErrorState({ message, onRetry }: { message: string; onRetry?: ()
 
 export function EmptyState({ title, hint, action }: { title: string; hint?: string; action?: ReactNode }) {
   return (
-    <div className="flex flex-col items-center gap-2 px-6 py-12 text-center">
-      <Inbox className="h-8 w-8 text-slate-300" aria-hidden />
+    <div className="animate-rise flex flex-col items-center gap-2 px-6 py-12 text-center">
+      <span className="mb-1 grid h-14 w-14 place-items-center rounded-2xl bg-slate-100"><Inbox className="h-7 w-7 text-slate-400" aria-hidden /></span>
       <p className="font-medium text-slate-700">{title}</p>
       {hint && <p className="max-w-md text-sm text-slate-500">{hint}</p>}
       {action}
@@ -63,7 +66,7 @@ export function Banner({ kind = 'info', children }: { kind?: 'info' | 'success' 
   }[kind]
   const Icon = kind === 'success' ? CheckCircle2 : AlertTriangle
   return (
-    <div role={kind === 'error' ? 'alert' : 'status'} className={`flex gap-3 rounded-lg border p-3 text-sm ${styles}`}>
+    <div role={kind === 'error' ? 'alert' : 'status'} className={`animate-drop flex gap-3 rounded-xl border p-3 text-sm ${styles}`}>
       <Icon className="mt-0.5 h-4 w-4 shrink-0" aria-hidden /> <div>{children}</div>
     </div>
   )
@@ -74,8 +77,9 @@ export function PageHeader({ title, subtitle, actions }: { title: string; subtit
   return (
     <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
       <div>
-        <h1 className="text-2xl font-semibold">{title}</h1>
-        {subtitle && <p className="mt-1 text-sm text-slate-500">{subtitle}</p>}
+        <h1 className="text-2xl font-semibold sm:text-[1.7rem]">{title}</h1>
+        <div className="mt-2 h-1 w-10 rounded-full bg-gradient-to-r from-teal-500 to-teal-300" aria-hidden />
+        {subtitle && <p className="mt-2 text-sm text-slate-500">{subtitle}</p>}
       </div>
       {actions && <div className="flex gap-2">{actions}</div>}
     </div>
@@ -97,11 +101,13 @@ export function Card({ title, actions, children, className = '', pad = true }: {
 
 export function Stat({ label, value, hint, tone = 'default', icon }: { label: string; value: ReactNode; hint?: string; tone?: 'default' | 'urgent' | 'attention' | 'good'; icon?: ReactNode }) {
   const ring = { default: '', urgent: 'ring-1 ring-red-200', attention: 'ring-1 ring-amber-200', good: 'ring-1 ring-teal-200' }[tone]
+  const bar = { default: 'from-navy-400 to-navy-200', urgent: 'from-red-500 to-red-300', attention: 'from-amber-500 to-amber-300', good: 'from-teal-500 to-teal-300' }[tone]
   const val = { default: 'text-navy-800', urgent: 'text-red-700', attention: 'text-amber-700', good: 'text-teal-700' }[tone]
   return (
-    <div className={`card p-4 ${ring}`}>
+    <div className={`card lift relative overflow-hidden p-4 ${ring}`}>
+      <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${bar}`} aria-hidden />
       <div className="flex items-center justify-between text-xs font-medium uppercase tracking-wide text-slate-500">{label}{icon}</div>
-      <div className={`mt-2 text-3xl font-semibold ${val}`}>{value}</div>
+      <div className={`mt-2 text-3xl font-semibold tabular-nums ${val}`}>{value}</div>
       {hint && <div className="mt-1 text-xs text-slate-500">{hint}</div>}
     </div>
   )
@@ -118,7 +124,7 @@ export function PriorityBadge({ level }: { level: Level | null | undefined }) {
   const dot = { routine: 'bg-teal-500', attention: 'bg-amber-500', urgent: 'bg-red-500' }[level]
   return (
     <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${s}`}>
-      <span className={`h-1.5 w-1.5 rounded-full ${dot}`} aria-hidden /> {LEVEL_TEXT[level]}
+      <span className={`h-1.5 w-1.5 rounded-full ${dot} ${level === 'urgent' ? 'animate-pulse' : ''}`} aria-hidden /> {LEVEL_TEXT[level]}
     </span>
   )
 }
@@ -148,8 +154,8 @@ export function Modal({ title, onClose, children }: { title: string; onClose: ()
     return () => document.removeEventListener('keydown', h)
   }, [onClose])
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy-900/50 p-4" onMouseDown={onClose}>
-      <div role="dialog" aria-modal="true" aria-label={title} className="card max-h-[90vh] w-full max-w-lg overflow-y-auto" onMouseDown={(e) => e.stopPropagation()}>
+    <div className="animate-fade fixed inset-0 z-50 flex items-center justify-center bg-navy-900/50 p-4 backdrop-blur-sm" onMouseDown={onClose}>
+      <div role="dialog" aria-modal="true" aria-label={title} className="animate-pop max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-2xl" onMouseDown={(e) => e.stopPropagation()}>
         <header className="flex items-center justify-between border-b border-slate-100 px-5 py-3">
           <h2 className="font-semibold text-navy-800">{title}</h2>
           <button className="btn-ghost p-1" onClick={onClose} aria-label="Close dialog"><X className="h-4 w-4" /></button>

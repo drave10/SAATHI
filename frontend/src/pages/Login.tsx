@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ClipboardList, HeartHandshake, LineChart, Loader2, LockKeyhole, Settings2, ShieldCheck, TriangleAlert, Users, type LucideIcon } from 'lucide-react'
+import { ArrowRight, ClipboardList, HeartHandshake, LineChart, Loader2, LockKeyhole, Settings2, ShieldCheck, TriangleAlert, Users, type LucideIcon } from 'lucide-react'
 import { useAuth } from '../auth/AuthContext'
 import { loginMode } from '../auth/loginMode'
 import { STATIC_DEMO, api, errorMessage } from '../api/client'
@@ -10,17 +10,18 @@ import type { Role } from '../types'
 
 function Hero() {
   return (
-    <section className="relative hidden flex-col justify-between overflow-hidden bg-navy-800 p-12 text-navy-100 lg:flex">
-      <div className="absolute -right-24 -top-24 h-96 w-96 rounded-full bg-teal-500/10" aria-hidden />
-      <div className="absolute -bottom-32 -left-16 h-96 w-96 rounded-full bg-navy-600/40" aria-hidden />
-      <Logo light />
-      <div className="relative max-w-lg">
+    <section className="relative hidden flex-col justify-between overflow-hidden bg-gradient-to-br from-navy-800 via-navy-800 to-navy-900 p-12 text-navy-100 lg:flex">
+      <div className="animate-float absolute -right-24 -top-24 h-96 w-96 rounded-full bg-teal-500/15 blur-2xl" aria-hidden />
+      <div className="animate-float-slow absolute -bottom-32 -left-16 h-96 w-96 rounded-full bg-navy-500/40 blur-2xl" aria-hidden />
+      <div className="absolute inset-0 opacity-[0.07] [background-image:radial-gradient(circle_at_1px_1px,white_1px,transparent_0)] [background-size:28px_28px]" aria-hidden />
+      <div className="animate-fade relative"><Logo light /></div>
+      <div className="stagger relative max-w-lg">
         <p className="text-sm font-medium uppercase tracking-widest text-teal-300">Smart AI-Assisted Trauma and Holistic Intervention</p>
         <h1 className="mt-4 text-4xl font-semibold leading-tight text-white">Early, explainable support for people who need to be heard.</h1>
         <p className="mt-4 text-navy-200">SAATHI helps authorised support workers notice changes in self-reported well-being and prioritise human follow-up — with transparent reasoning and privacy built in.</p>
-        <ul className="mt-8 space-y-4 text-sm">
+        <ul className="stagger mt-8 space-y-4 text-sm">
           {([[HeartHandshake, 'Gentle, non-stigmatising check-ins for beneficiaries'], [LineChart, 'Longitudinal monitoring with explainable review priorities'], [Users, 'Case management: follow-ups, interventions and notes'], [LockKeyhole, 'Role-based access, consent controls and audit logging']] as [LucideIcon, string][]).map(([Icon, t], i) => (
-            <li key={i} className="flex items-center gap-3"><span className="grid h-8 w-8 place-items-center rounded-lg bg-navy-700"><Icon className="h-4 w-4 text-teal-300" aria-hidden /></span>{t}</li>
+            <li key={i} className="flex items-center gap-3"><span className="grid h-8 w-8 place-items-center rounded-lg bg-white/10 ring-1 ring-white/10"><Icon className="h-4 w-4 text-teal-300" aria-hidden /></span>{t}</li>
           ))}
         </ul>
       </div>
@@ -73,9 +74,9 @@ export function DemoLogin({ retryDelayMs = 3000, maxAttempts = 6 }: { retryDelay
     <div className="grid min-h-screen lg:grid-cols-2">
       <Hero />
       <section className="flex items-center justify-center px-4 py-10 sm:px-8">
-        <div className="w-full max-w-md">
+        <div className="animate-rise w-full max-w-md">
           <div className="mb-8 lg:hidden"><Logo /></div>
-          <h2 className="text-2xl font-semibold">Try the SAATHI demo</h2>
+          <h2 className="text-2xl font-semibold sm:text-3xl">Try the SAATHI demo</h2>
           <p className="mt-1 text-sm text-slate-500">Choose a role to explore the prototype. No username or password is needed.</p>
 
           <div role="note" className="mt-5 flex gap-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
@@ -85,17 +86,18 @@ export function DemoLogin({ retryDelayMs = 3000, maxAttempts = 6 }: { retryDelay
 
           {error && <div className="mt-5"><Banner kind="error">{error}</Banner></div>}
 
-          <div className="mt-5 space-y-3" role="group" aria-label="Choose a role">
+          <div className="stagger mt-5 space-y-3" role="group" aria-label="Choose a role">
             {ROLES.map(({ role, title, icon: Icon, text }) => (
               <button key={role} type="button" aria-label={title} aria-describedby={`desc-${role}`} disabled={busy !== null} onClick={() => enter(role)}
-                className="group flex w-full items-start gap-4 rounded-xl border border-slate-200 bg-white p-4 text-left shadow-card transition hover:border-teal-400 hover:bg-teal-50/40 focus-visible:border-teal-500 disabled:cursor-not-allowed disabled:opacity-60">
-                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-navy-700 text-white group-hover:bg-teal-600">
+                className="lift group flex w-full items-start gap-4 rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-card hover:border-teal-400 hover:bg-teal-50/40 focus-visible:border-teal-500 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60">
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-navy-600 to-navy-800 text-white shadow-sm transition-all duration-300 group-hover:from-teal-500 group-hover:to-teal-700">
                   {busy === role ? <Loader2 className="h-5 w-5 animate-spin" aria-hidden /> : <Icon className="h-5 w-5" aria-hidden />}
                 </span>
                 <span>
                   <span className="block text-base font-semibold text-navy-800" aria-hidden>{title}</span>
                   <span id={`desc-${role}`} className="mt-0.5 block text-sm text-slate-600">{text}</span>
                 </span>
+                <ArrowRight className="ml-auto mt-3 h-4 w-4 shrink-0 -translate-x-2 text-teal-600 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100" aria-hidden />
               </button>
             ))}
           </div>
